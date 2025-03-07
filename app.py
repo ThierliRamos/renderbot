@@ -396,7 +396,7 @@ def download_tiktok_video():
         payload = json.dumps({"url": video_url})
 
         headers = {
-            'x-rapidapi-key': "SUA_CHAVE_API_AQUI",
+            'x-rapidapi-key': "99bb57d209mshb6ca809dc147a3ep1a51e7jsnf829ae92aef6",
             'x-rapidapi-host': "auto-download-all-in-one-big.p.rapidapi.com",
             'Content-Type': "application/json"
         }
