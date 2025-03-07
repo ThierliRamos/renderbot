@@ -383,7 +383,7 @@ def tiktok_page():
     return render_template('tiktok.html')  # Renderiza a página de download do TikTok
 
 # Rota para baixar vídeos do TikTok
-@app.route('/tiktok/download_video', methods=['POST'])
+@app.route('/tiktok/download_video', methods=['GET', 'POST'])
 def download_tiktok_video():
     if request.method == 'POST':
         video_url = request.json.get('url')
