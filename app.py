@@ -377,13 +377,12 @@ def download_audio():
 
 # BAIXAR VIDEOS DO TIKTOK
 
-# Rota para a página do TikTok
 @app.route('/tiktok')
 def tiktok_page():
     return render_template('tiktok.html')  # Renderiza a página de download do TikTok
 
 # Rota para baixar vídeos do TikTok
-@app.route('/tiktok/download_video', methods=['GET', 'POST'])
+@app.route('/tiktok/download_video', methods=['POST'])
 def download_tiktok_video():
     if request.method == 'POST':
         video_url = request.json.get('url')
@@ -428,7 +427,20 @@ def download_tiktok_video():
         if not download_url:
             return jsonify({'message': 'Nenhum vídeo disponível sem marca d\'água.'}), 404
 
-        return jsonify({'url': download_url, 'title': title})
+        # Baixar o vídeo e retornar diretamente ao cliente
+        video_response = requests.get(download_url, stream=True)
+        if video_response.status_code != 200:
+            return jsonify({'message': 'Erro ao baixar o vídeo do TikTok.'}), 500
+
+        # Retornar o vídeo diretamente no fluxo de resposta
+        return Response(video_response.iter_content(chunk_size=8192), 
+                        content_type='video/mp4',
+                        headers={"Content-Disposition": f"attachment;filename={title.replace(' ', '_')}.mp4"})
+
+    return jsonify({'message': 'Método não permitido.'}), 405
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
