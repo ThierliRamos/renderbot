@@ -377,12 +377,13 @@ def download_audio():
 
 # BAIXAR VIDEOS DO TIKTOK
 
+# Rota para a página do TikTok
 @app.route('/tiktok')
 def tiktok_page():
     return render_template('tiktok.html')  # Renderiza a página de download do TikTok
 
 # Rota para baixar vídeos do TikTok
-@app.route('/tiktok/download_video', methods=['POST'])
+@app.route('/tiktok/download_video', methods=['GET', 'POST'])
 def download_tiktok_video():
     if request.method == 'POST':
         video_url = request.json.get('url')
@@ -427,17 +428,116 @@ def download_tiktok_video():
         if not download_url:
             return jsonify({'message': 'Nenhum vídeo disponível sem marca d\'água.'}), 404
 
+        return jsonify({'url': download_url, 'title': title})
+    
+
+# Rota para a página allvideos
+@app.route('/allvideos')
+def all_videos_page():
+    return render_template('allvideos.html')  # Renderiza a página de download de vídeos
+
+# Rota para baixar vídeos de várias fontes
+@app.route('/download_all_videos', methods=['GET', 'POST'])
+def download_all_videos():
+    if request.method == 'POST':
+        video_url = request.json.get('url')
+
+        if not video_url:
+            return jsonify({'message': 'A URL é necessária!'}), 400
+
+        conn = http.client.HTTPSConnection("all-video-downloader1.p.rapidapi.com")
+
+        payload = f"url={requests.utils.quote(video_url)}"
+
+        headers = {
+            'x-rapidapi-key': "99bb57d209mshb6ca809dc147a3ep1a51e7jsnf829ae92aef6",
+            'x-rapidapi-host': "all-video-downloader1.p.rapidapi.com",
+            'Content-Type': "application/x-www-form-urlencoded"
+        }
+
+        conn.request("POST", "/all", payload, headers)
+
+        res = conn.getresponse()
+        data = res.read()
+
+        if res.status != 200:
+            return jsonify({'message': 'Erro ao baixar o vídeo.'}), 500
+
+        response_data = json.loads(data.decode("utf-8"))
+        download_url = response_data.get('url')
+        title = response_data.get('title', 'video')
+
+        if not download_url:
+            return jsonify({'message': 'Nenhum vídeo disponível para download.'}), 404
+
         # Baixar o vídeo e retornar diretamente ao cliente
         video_response = requests.get(download_url, stream=True)
         if video_response.status_code != 200:
-            return jsonify({'message': 'Erro ao baixar o vídeo do TikTok.'}), 500
+            return jsonify({'message': 'Erro ao baixar o vídeo.'}), 500
 
-        # Retornar o vídeo diretamente no fluxo de resposta
         return Response(video_response.iter_content(chunk_size=8192), 
                         content_type='video/mp4',
                         headers={"Content-Disposition": f"attachment;filename={title.replace(' ', '_')}.mp4"})
 
     return jsonify({'message': 'Método não permitido.'}), 405
+
+# Rota para a página de remoção de fundo
+@app.route('/removefundo')
+def remove_fundo():
+    return render_template('remove_background.html')  # Renderiza a página de remoção de fundo
+
+# Rota para remover o fundo da imagem
+@app.route('/remove_background', methods=['POST'])
+def remove_background():
+    if 'file' not in request.files:
+        return jsonify({'message': 'Nenhum arquivo enviado!'}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'message': 'Nenhum arquivo selecionado!'}), 400
+
+    # Prepare a requisição
+    conn = http.client.HTTPSConnection("remove-background18.p.rapidapi.com")
+
+    # Criar o payload usando FormData
+    payload = (
+        f"--boundary\r\n"
+        f"Content-Disposition: form-data; name=\"file\"; filename=\"{file.filename}\"\r\n"
+        f"Content-Type: application/octet-stream\r\n\r\n"
+    ).encode() + file.read() + b"\r\n--boundary--\r\n"
+
+    # Headers
+    headers = {
+        'x-rapidapi-key': "99bb57d209mshb6ca809dc147a3ep1a51e7jsnf829ae92aef6",
+        'x-rapidapi-host': "remove-background18.p.rapidapi.com",
+        'Content-Type': "multipart/form-data; boundary=boundary",
+        'accept': "application/json"
+    }
+
+    # Enviar a requisição
+    try:
+        conn.request("POST", "/public/remove-background", payload, headers)
+        res = conn.getresponse()
+        data = res.read()
+
+        print(f"Response Status: {res.status}")
+        print(f"Response Data: {data.decode('utf-8')}")
+
+        if res.status != 200:
+            return jsonify({'message': 'Erro ao remover fundo da imagem.', 'details': data.decode('utf-8')}), 500
+
+        # Processar a resposta
+        response_data = json.loads(data.decode("utf-8"))
+        image_url = response_data.get('url')
+
+        if not image_url:
+            return jsonify({'message': 'Erro ao processar a imagem.'}), 500
+
+        return jsonify({'image_url': image_url})
+
+    except Exception as e:
+        return jsonify({'message': 'Erro no servidor.', 'error': str(e)}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
