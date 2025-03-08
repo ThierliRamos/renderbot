@@ -239,8 +239,8 @@ footer {
                         <button onclick="location.href='{{ url_for('download_video') }}'"><b>Baixar Vídeos</b></button>
                     </div>
                     <div class="card">
-                        <p>Baixe listas do YouTube.</p>
-                        <button onclick="consultar('Baixar Listas')"><b>Baixar Listas</b></button>
+                        <p>Baixe qualquer vídeo.</p>
+                        <button onclick="location.href='{{ url_for('all_videos_page') }}'"><b>Baixar Vídeos</b></button>
                     </div>
                     <div class="card">
                         <p>Baixe Videos do TikTok.</p>
@@ -248,6 +248,17 @@ footer {
                     </div>
                 </div>
             </div>
+
+            <p class="download-text">
+                <span class="background-text"><b>Baixe Imagens, Remova fundo e outros...</b></span>
+            </p>
+
+            <div class="card">
+                <p>Baixe Videos do TikTok.</p>
+                <button onclick="location.href='{{ url_for('remove_fundo') }}'"><b>Baixar Vídeos</b></button>
+            </div>
+
+
         </section>
     </main>
 
