@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remover Fundo da Imagem</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            background-color: white;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 300px; 
+            margin-top: 10px;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px;
+            background-color: #6827a5e1;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #5300a1e1;
+        }
+        .status-message {
+            color: green; 
+            margin-top: 10px; 
+        }
+        .error {
+            color: red; 
+            display: none; 
+        }
+        .back-button {
+            background-color: #6827a5e1;
+            color: white;            
+            padding: 10px;            
+            border-radius: 5px;            
+            text-decoration: none;            
+            font-size: 16px;            
+            margin-bottom: 20px;  
+            margin-top: 70px;          
+            transition: background-color 0.3s;        
+            text-align: center;            
+            width: 165px;            
+        }
+        .back-button:hover {            
+            background-color: #5300a1e1;        
+        }
+        .result-link {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="location.href='{{ url_for('main') }}'">Voltar para o Início</button> <!-- Botão de Voltar --> 
+    <div class="container">
+        <h1>Remover Fundo da Imagem</h1>
+        <form id="imageForm" onsubmit="removerFundo(); return false;" enctype="multipart/form-data">
+            <input type="file" id="imageFile" name="file" accept="image/*" required>
+            <button type="submit">Remover Fundo</button>
+        </form>
+        <div class="status-message" id="imageStatusMessage"></div> <!-- Mensagem de status -->
+        <div class="result-link" id="resultLink" style="display: none;">
+            <a id="downloadLink" href="#" target="_blank">
+                <button>Ver Imagem com Fundo Removido</button>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function removerFundo() {
+            const imageFile = document.getElementById('imageFile').files[0];
+            const imageStatusMessage = document.getElementById('imageStatusMessage');
+            const resultLink = document.getElementById('resultLink');
+            const downloadLink = document.getElementById('downloadLink');
+
+            // Limpar resultados e erros anteriores
+            imageStatusMessage.style.display = 'none'; // Limpar mensagem de status
+
+            const formData = new FormData();
+            formData.append('file', imageFile);
+
+            // Mostrar mensagem de "Removendo fundo, aguarde..."
+            imageStatusMessage.textContent = 'Removendo fundo, aguarde...';
+            imageStatusMessage.style.display = 'block';
+
+            fetch('/remove_background', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao remover fundo da imagem.');
+                }
+                return response.json();  // Mudança aqui para lidar com a resposta JSON
+            })
+            .then(data => {
+                const imageUrl = data.image_url; // Acessando a URL corretamente
+                downloadLink.href = imageUrl; // Define o href do link
+                resultLink.style.display = 'block'; // Mostra o link
+                imageStatusMessage.textContent = 'Fundo removido!'; // Altera a mensagem de status
+            })
+            .catch(error => {
+                imageStatusMessage.textContent = error.message;
+                console.error('Erro ao remover fundo:', error);
+            });
+        }
+    </script>
+
+</body>
+</html>
